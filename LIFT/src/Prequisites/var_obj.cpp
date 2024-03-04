@@ -8,6 +8,8 @@
 /*objek*/
 HX711 sensor_berat;
 
+// int counter=0;
+
 /* buzzer, led*/
 const int buzzer_pin=5; //pin buzzer
 const int led1_pin=0; //pin led

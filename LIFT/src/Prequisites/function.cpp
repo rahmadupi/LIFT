@@ -26,7 +26,7 @@ int elev_pos_bottom_floor_check(){
     //if(state==HIGH) Serial.println("HIGH");
     //flagged tak walek dok var_obj
     if(digitalRead(ir_cns_pin_floor)==LOW) {
-        Serial.println("LOW");
+        //Serial.println("LOW");
         return 1;
     }
     else return 0;
@@ -37,11 +37,11 @@ int weight_check(){
         //const int kalibrasi=0;
         sensor_berat.set_scale(KALIBRASI);    
         Serial.println("Tare... remove any weights from the sensor_berat.");
-        delay(100);
+        //delay(100);
         sensor_berat.tare();
         Serial.println("Tare done...");
         Serial.print("Place a known weight on the sensor_berat...");
-        delay(100);
+        //delay(100);
         long reading = sensor_berat.get_units(10);
         //Serial.print("Result: ");
         //Serial.println(reading);
@@ -69,7 +69,7 @@ int elev_door_ops_interuption(){ //sensor inframerah
 
 void elev_door_ops(int open_close){ //0 close 1 Open , int permission
     if(open_close==1){
-        playServo(3, 1024, 1500);
+        playServo(3, 1023, 1500);
         Serial.println("door opened");
     }
     else if(open_close==0){
@@ -170,17 +170,24 @@ void on_elev_input(int current_floor, int current_cycle, int query[], int saved[
     sort_on_cycle(floor, dir, current_cycle, query, saved);
 }
 
-
+int counter=0;
 void sort_elev_move_query(int *main_query, int current_cycle, int elev_query[], int floor_query[]){
-    int counter=0;
+    //int counter=0;
+    int init=0;
     if(current_cycle==UP){
         for(int i=0;i<FLOOR_COUNT;i++){
-            if(elev_query[i]==1 || floor_query[i]==1) main_query[counter++]=i+1;
+            if(elev_query[i]==1 || floor_query[i]==1){
+                for(int j=0;j<FLOOR_COUNT+1;j++) if((i+1)==main_query[j]) init=1;
+                if(init!=1) main_query[counter++]=i+1;
+            }
         }
     }
     else if(current_cycle==DOWN){
         for(int i=FLOOR_COUNT-1;i>=0;i--){
-            if(elev_query[i]==1 || floor_query[i]==1) main_query[counter++]=i+1;
+            if(elev_query[i]==1 || floor_query[i]==1){
+                for(int j=0;j<FLOOR_COUNT+1;j++) if((i+1)==main_query[j]) init=1;
+                if(init!=1) main_query[counter++]=i+1;
+            } 
         }
     }
     main_query[counter]=0;
@@ -214,16 +221,23 @@ void sort_elev_move_query(int *main_query, int current_cycle, int elev_query[], 
 
 int elev_begin_passed=0;
 void elev_move_start(int current_floor, int current_cycle, int main_query[], int time_sheet[], int *lift_status, unsigned long long *elev_millis, unsigned long long *door_millis, int *door_open_permission, int *door_status, int existing_order){ // elev move start
+    
     const int begin_elev_move=5000; //8 detik untuk menunggu input dari dalam lift
     const int door_permission_closed=2000; //3 detik untuk menutup pintu lift____ruang untuk interupsi
 
+    //Serial.println( "Current "+String(main_query[0]));
     //flagged
     // if(weight_check()==1){
-    //     tone(buzzer_pin, 1000);
+    //     //digitalWrite(buzzer_pin, LOW);
+    //     Serial.println("Overload");
+    //     // while(1){
+    //     //     tone(buzzer_pin, 1000);
+    //     //     Serial.println("Overload");
+    //     //     if(weight_check()!=1) break;
+    //     // }
     //     return;
     // }
-    // else noTone(buzzer_pin);
-
+    //else return;//digitalWrite(buzzer_pin, HIGH);
     //==========================================================
     unsigned long long current_millis=millis(); //current millis
 
@@ -291,13 +305,14 @@ void elev_move_start(int current_floor, int current_cycle, int main_query[], int
 
 //flagged
 void remove_query_order(int *query){
+    counter--;
     for(int i=0;i<4;i++) query[i]=query[i+1];
     query[3]=0;
     Serial.println("query removed"+String(query[0]));
 }
 
 
-void on_move_completion(int *main_query, int time_sheet[], int *lift_status, int current_cycle, int *current_floor, unsigned long long *elev_millis, int *door_open_permission, int *door_status){ // elev move stop
+int on_move_completion(int main_query[], int time_sheet[], int *lift_status, int current_cycle, int *current_floor, unsigned long long *elev_millis, int *door_open_permission, int *door_status){ // elev move stop
     unsigned long long current_millis=millis();
     int floor_destination=main_query[0];
     int elev_stop_time=0;
@@ -329,9 +344,9 @@ void on_move_completion(int *main_query, int time_sheet[], int *lift_status, int
         elev_door_ops(1);
         *door_status=1;
         *door_open_permission=1;
-        return;
+        return main_query[0];
     }
-    else return;
+    else return 0;
     
 } 
 
@@ -373,11 +388,13 @@ void reset_elev_pos(int *start){
     Serial.println("Elevator dropping, Waiting for the censor input");
     //flagged
     //tone(buzzer_pin, 1000);
-    wheelMode(1, 1280);
-    wheelMode(2, 1280);
+    wheelMode(1,300);
+    wheelMode(2, 2000);
+    setLED(1, 2);
+    setLED(2, 2);
     while(1){ 
         //wait
-        Serial.println("X");
+        Serial.println("Elevator dropping");
         if(elev_pos_bottom_floor_check()){
             Serial.println("Censor triggered, Elevator at bottom floor");
             //noTone(buzzer_pin);

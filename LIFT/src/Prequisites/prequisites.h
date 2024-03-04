@@ -9,6 +9,8 @@
 //extern Adafruit_SSD1306 oled();  // create an OLED display object connected to I2C
 extern HX711 sensor_berat;
 
+//extern counter;
+
 /* buzzer, led*/
 extern const int buzzer_pin; //pin buzzer
 extern const int led1_pin;   //pin led
@@ -137,7 +139,7 @@ void remove_query_order(int *query);
 /// @param elev_millis nilai waktu eksekusi program, untuk lift
 /// @param door_open_permission izin pembukaan pntu lift
 /// @param door_status status dari pintu lift terbuka 1 atau tertutup 0
-void on_move_completion(int *main_query, int time_sheet[], int *lift_status, int current_cycle, int *current_floor, unsigned long long *elev_millis, int *door_open_permission, int *door_status);
+int on_move_completion(int main_query[], int time_sheet[], int *lift_status, int current_cycle, int *current_floor, unsigned long long *elev_millis, int *door_open_permission, int *door_status);
 
 /// @brief mengecek apakah masih terdapat perintah untuk lift yang belum dijalankan
 /// @param main_query array akhir gabungan dari elev_input_query dan floor_call_query

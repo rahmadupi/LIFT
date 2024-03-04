@@ -17,6 +17,7 @@ Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);  // create an OLE
 
 
 int start=1;
+
 /* variable global untuk algoritma lift*/ //nilai 0 default
 int floor_call_query[5]={0,0,0}; //wadah untuk input call dari lantai yang searah dengan cycle lift
 int floor_call_saved[5]={0,0,0}; //wadah untuk input call dari lantai yang tidak searah dengan cycle lift
@@ -25,8 +26,8 @@ int elev_input_saved[5]={0,0,0}; //wadah untuk input call dari lift yang tidak s
 int elev_move_query[5]={0,0,0,0,0}; // wadah akhir value untuk diproses lift
 
 //flagged
-//int time_sheet[3]={10300, 10300}; //waktu perpindahan lift dari setiap lantai
-int time_sheet[3]={7000, 7000};
+int time_sheet[3]={3000, 3000}; //waktu perpindahan lift dari setiap lantai
+//int time_sheet[3]={7000, 7000};
 
 int current_cycle=1; //arah lift 1 munggah 2 mudun
 int current_floor=1; //penanda posisi lift
@@ -75,6 +76,9 @@ void setup(){
     pinMode(button22_outer, INPUT_PULLUP);
     pinMode(button32_outer, INPUT_PULLUP);
 
+    // pinMode(buzzer_pin, OUTPUT);
+    // noTone(buzzer_pin);
+
     //test
     //onOffTorque(1, 1);
     delay(500);
@@ -106,12 +110,15 @@ void loop() {
     on_elev_input(current_floor, current_cycle, elev_input_query, elev_input_saved);
     sort_elev_move_query(elev_move_query, current_cycle, elev_input_query, floor_call_query);
 
+
     if(lift_status!=MOVING) elev_move_start(current_floor, current_cycle, elev_move_query, time_sheet, &lift_status, &elev_move_millis, &elev_door_millis, &door_open_permission, &door_status, existing_order);
-    else if(lift_status==MOVING) on_move_completion(elev_move_query, time_sheet, &lift_status, current_cycle, &current_floor, &elev_move_millis, &door_open_permission, &door_status) ;
     
-    // on_floor_call(current_floor , current_cycle, floor_call_query, floor_call_saved);
-    // on_elev_input(current_floor, current_cycle, elev_input_query, elev_input_saved);
-    // sort_elev_move_query(elev_move_query, current_cycle, elev_input_query, floor_call_query);
+    //else if(lift_status==MOVING) on_move_completion(elev_move_query, time_sheet, &lift_status, current_cycle, &current_floor, &elev_move_millis, &door_open_permission, &door_status);
+    else if(lift_status==MOVING){
+        int temp=on_move_completion(elev_move_query, time_sheet, &lift_status, current_cycle, &current_floor, &elev_move_millis, &door_open_permission, &door_status);
+        if(temp!=0) elev_move_query[0]=temp;
+    }
+    //Serial.println("Current Order "+String(elev_move_query[0]));
     
     if(check_on_query(elev_move_query, &existing_order)==0) on_cycle_end(&current_cycle, elev_move_query, elev_input_query, floor_call_query, elev_input_saved, floor_call_saved);
 
@@ -150,6 +157,8 @@ void loop() {
     //playServo(3, random(1, 1023), 1500);
     //current_floor++;
     //delay(1000);
+    //if(digitalRead(buttonopen_inner)==LOW) elev_door_ops(0);
+    //else if(digitalRead(buttonopen_inner)==LOW) elev_door_ops(1);
 }
 
 
